@@ -15,6 +15,8 @@
             background-color: #121212;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #e0e0e0;
+            overflow: hidden;
+            touch-action: none;
         }
 
         .game-container {
@@ -28,6 +30,55 @@
             margin-bottom: 10px;
             font-size: 20px;
             font-weight: bold;
+        }
+
+        /* Desktop styles */
+        canvas {
+            width: 400px;
+            height: 400px;
+            background-color: #1e1e1e;
+            border: 2px solid #bb86fc;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(187, 134, 252, 0.3);
+            background-image:
+                linear-gradient(#2d2d2d 1px, transparent 1px),
+                linear-gradient(90deg, #2d2d2d 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* Mobile styles */
+        @media (max-width: 600px) {
+            .game-container {
+                width: 90vw;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .score-container {
+                width: 90vw;
+                margin-bottom: 5px;
+                font-size: 16px;
+            }
+
+            canvas {
+                width: 90vw;
+                height: 90vw;
+                max-width: 400px;
+                max-height: 400px;
+                background-color: #1e1e1e;
+                border: 2px solid #bb86fc;
+                border-radius: 5px;
+                box-shadow: 0 0 20px rgba(187, 134, 252, 0.3);
+                background-image:
+                    linear-gradient(#2d2d2d 1px, transparent 1px),
+                    linear-gradient(90deg, #2d2d2d 1px, transparent 1px);
+                background-size: 5vw 5vw;
+            }
+
+            .game-over {
+                width: 90vw;
+            }
         }
 
         .score {
@@ -331,6 +382,73 @@
                     break;
             }
         });
+
+        // Touch swipe support for mobile devices
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        // Set up touch event listeners
+        canvas.addEventListener('touchstart', (e) => {
+            // Prevent scrolling during touch
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }, {passive: false});
+
+        canvas.addEventListener('touchmove', (e) => {
+            // Prevent scrolling during touch
+            e.preventDefault();
+        }, {passive: false});
+
+        canvas.addEventListener('touchend', (e) => {
+            // Prevent default touch behavior
+            e.preventDefault();
+
+            // Calculate swipe distance
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const dxSwipe = touchEndX - touchStartX;
+            const dySwipe = touchEndY - touchStartY;
+
+            // Determine swipe direction based on greatest distance
+            const absDx = Math.abs(dxSwipe);
+            const absDy = Math.abs(dySwipe);
+
+            // Only consider intentional swipes (minimum threshold)
+            const minSwipeDistance = 30;
+
+            if (Math.max(absDx, absDy) > minSwipeDistance) {
+                // Horizontal swipe has higher priority
+                if (absDx > absDy) {
+                    // Left or right swipe
+                    if (dx === 0) { // Only change direction if moving vertically or stationary
+                        if (dxSwipe > 0) {
+                            // Swipe right
+                            dx = 1;
+                            dy = 0;
+                        } else {
+                            // Swipe left
+                            dx = -1;
+                            dy = 0;
+                        }
+                    }
+                } else {
+                    // Vertical swipe
+                    if (dy === 0) { // Only change direction if moving horizontally or stationary
+                        if (dySwipe > 0) {
+                            // Swipe down
+                            dx = 0;
+                            dy = 1;
+                        } else {
+                            // Swipe up
+                            dx = 0;
+                            dy = -1;
+                        }
+                    }
+                }
+            }
+        }, {passive: false});
 
         // Initialize game on load
         highScoreElement.textContent = highScore;
